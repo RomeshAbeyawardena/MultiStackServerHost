@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MultiStackServiceHost.Shared.Extensions;
 using MultiStackServiceHost.Broker;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace MultiStackServerHost.Applet
 {
@@ -21,6 +22,8 @@ namespace MultiStackServerHost.Applet
                     .AddJsonFile("appsettings.json")
                     .AddCommandLine(args))
                 .ConfigureServices(RegisterServices)
+                .ConfigureLogging(logging => logging
+                    .AddConsole())
                 .Build<Startup>()
                 .UseStartup(startingAsyncMethod: (a, cancellationToken) => a.StartAsync(cancellationToken))
                 .StartAsync();

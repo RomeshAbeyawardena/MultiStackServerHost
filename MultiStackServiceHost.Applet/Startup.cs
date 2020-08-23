@@ -1,4 +1,5 @@
-﻿using MultiStackServiceHost.Contracts;
+﻿using Microsoft.Extensions.Logging;
+using MultiStackServiceHost.Contracts;
 using MultiStackServiceHost.Domains;
 using System;
 using System.Reactive.Subjects;
@@ -10,11 +11,13 @@ namespace MultiStackServerHost.Applet
     public class Startup
     {   
         public Startup(
+            ILogger<Startup> logger,
             ISubject<AppState> appStateSubject, 
             IApplicationState applicationState,
             ICommandActions commandActions,
             ICommandParser commandParser)
         {
+            this.logger = logger;
             this.applicationState = applicationState;
             this.commandActions = commandActions;
             this.commandParser = commandParser;
@@ -24,7 +27,7 @@ namespace MultiStackServerHost.Applet
         public Task StartAsync(CancellationToken cancellationToken)
         {
             applicationState.SetRunningState(true);
-            Console.WriteLine("");
+            logger.LogInformation("Starting app...");
             while (appState.IsRunning)
             {
                 Console.Write("\r\n> ");
@@ -49,6 +52,7 @@ namespace MultiStackServerHost.Applet
         }
 
         private AppState appState;
+        private readonly ILogger<Startup> logger;
         private readonly IApplicationState applicationState;
         private readonly ICommandActions commandActions;
         private readonly ICommandParser commandParser;

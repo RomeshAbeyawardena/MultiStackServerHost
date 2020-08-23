@@ -2,6 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using MultiStackServiceHost.Shared.Builders;
 using MultiStackServiceHost.Shared.Contracts;
 using MultiStackServiceHost.Shared.Extensions;
 using System;
@@ -15,6 +17,7 @@ namespace MultiStackServiceHost.Shared.Hosts
         {
             services = new ServiceCollection();
             configurationBuilder = new ConfigurationBuilder();
+            loggingBuilder = new LoggingBuilder(services);
             Properties = properties == null 
                 ? new Dictionary<object, object>()
                 : new Dictionary<object, object>(properties);
@@ -32,7 +35,12 @@ namespace MultiStackServiceHost.Shared.Hosts
 
         public IHost Build()
         {
-            services.AddSingleton<IConfiguration>(configurationBuilder.Build());
+            services
+                .AddOptions()
+                .AddSingleton<IConfiguration>(configurationBuilder.Build())
+                .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
+                .AddSingleton(typeof(ILoggerFactory), typeof(LoggerFactory));
+
             return new AppHost(services.BuildServiceProvider());
         }
 
@@ -95,6 +103,13 @@ namespace MultiStackServiceHost.Shared.Hosts
             return this;
         }
 
+        public IAppHostBuilder ConfigureLogging(Action<ILoggingBuilder> configureDelegate)
+        {
+            configureDelegate(loggingBuilder);
+            return this;
+        }
+
+        private readonly ILoggingBuilder loggingBuilder;
         private readonly IConfigurationBuilder configurationBuilder;
         private readonly IServiceCollection services;
         private readonly HostBuilderContext context;

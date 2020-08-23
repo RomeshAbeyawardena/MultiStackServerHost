@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace MultiStackServiceHost.Shared.Contracts
@@ -9,6 +10,7 @@ namespace MultiStackServiceHost.Shared.Contracts
     {
         IAppHost<TStartup> Build<TStartup>()
             where TStartup: class;
+        IAppHostBuilder ConfigureLogging(Action<ILoggingBuilder> loggingBuilder);
         new IAppHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configurationDelegate);
         new IAppHostBuilder ConfigureHostConfiguration(Action<IConfigurationBuilder> configurationDelegate);
         new IAppHostBuilder ConfigureAppConfiguration(Action<HostBuilderContext, IConfigurationBuilder> configurationDelegate);

@@ -6,12 +6,15 @@ using System.Collections.Generic;
 
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace MultiStackServiceHost.Services
 {
     public class CommandActions : Switch<string, Action<Command>>, ICommandActions
     {
         public CommandActions(
+            ILogger<CommandActions> logger,
             IProcessService processService,
             IApplicationState applicationState,
             ApplicationSettings applicationSettings)
@@ -24,6 +27,7 @@ namespace MultiStackServiceHost.Services
                 .CaseWhen("read", ReadLogs)
                 .CaseWhen("abort", Abort)
                 .CaseWhen("quit", Quit);
+            this.logger = logger;
             this.processService = processService;
             this.applicationState = applicationState;
             this.applicationSettings = applicationSettings;
@@ -40,7 +44,7 @@ namespace MultiStackServiceHost.Services
 
                 if (command != null)
                 {
-                    Console.WriteLine(cmd.LogBuilder.ToString());
+                    logger.LogInformation(cmd.LogBuilder.ToString());
                 }
             }
         }
@@ -53,7 +57,7 @@ namespace MultiStackServiceHost.Services
                 {
                     parameter.Instance = Task.Run(() =>
                     {
-                        Console.WriteLine($"Task { parameter.CommandText } running");
+                        logger.LogInformation($"Task { parameter.CommandText } running");
                         var process = processService.StartProcess(applicationSettings.FileName, parameter.CommandText, parameter.WorkingDirectory);
                         parameter.ProcessInstance = process;
                         parameter.Activated = true;
@@ -69,7 +73,7 @@ namespace MultiStackServiceHost.Services
                         
                         process.WaitForExit();
                         parameter.Activated = false;
-                        Console.WriteLine($"Task { parameter.CommandText } completed");
+                        logger.LogInformation($"Task { parameter.CommandText } completed");
                     });
                 }
             }
@@ -107,15 +111,22 @@ namespace MultiStackServiceHost.Services
         {
             if (parameters.IsEmpty())
             {
-                Console.WriteLine("Nothing to list, add commands using the add command");
+                logger.LogInformation("Nothing to list, add commands using the add command");
+                return;
             }
 
-            Console.WriteLine("Index:\t[CommandText]\t\t\t[Activated]\t[Working Directory]");
+            var listBuilder = new StringBuilder();
+            listBuilder.AppendFormat("\r\nIndex:\t[CommandText]\t\t\t[Activated]\t[Working Directory]\r\n");
+            
             var index = 0;
             foreach (var parameter in parameters)
             {
-                Console.WriteLine("{0}:\t{1}\t\t\t{2}\t{3}\t{4}", index++, parameter.CommandText, parameter.Activated, parameter.Instance?.Id, parameter.WorkingDirectory);
+                listBuilder.AppendFormat("{0}:\t{1}\t\t\t{2}\t{3}\t{4}\r\n", 
+                    index++, parameter.CommandText, parameter.Activated, 
+                    parameter.Instance?.Id, parameter.WorkingDirectory);
             }
+
+            logger.LogInformation(listBuilder.ToString());
         }
 
         private void Quit(Command command)
@@ -125,6 +136,7 @@ namespace MultiStackServiceHost.Services
         }
 
         private readonly List<Parameter> parameters;
+        private readonly ILogger<CommandActions> logger;
         private readonly IProcessService processService;
         private readonly IApplicationState applicationState;
         private readonly ApplicationSettings applicationSettings;
