@@ -7,7 +7,7 @@ using MultiStackServiceHost.Broker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace MultiStackServerHost.Applet
+namespace MultiStackServiceHost.Applet
 {
     static class Program
     {

@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiStackServiceHost.Servi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiStackServiceHost.Contracts", "MultiStackServiceHost.Contracts\MultiStackServiceHost.Contracts.csproj", "{37CB9A1D-D980-4CD5-B508-BE8971E88421}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiStackServerHost.Applet", "MultiStackServiceHost.Applet\MultiStackServerHost.Applet.csproj", "{6FCC12C7-8EB6-43C3-8F39-BEB385515FDC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiStackServerHost.Applet", "MultiStackServiceHost.Applet\MultiStackServiceHost.Applet.csproj", "{6FCC12C7-8EB6-43C3-8F39-BEB385515FDC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiStackServiceHost.Broker", "MultiStackServiceHost.Broker\MultiStackServiceHost.Broker.csproj", "{3C516244-F3C4-4019-9926-BFA5B4B781C7}"
 EndProject

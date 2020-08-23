@@ -6,7 +6,7 @@ using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MultiStackServerHost.Applet
+namespace MultiStackServiceHost.Applet
 {
     public class Startup
     {   
