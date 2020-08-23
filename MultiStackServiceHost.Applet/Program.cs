@@ -6,6 +6,7 @@ using MultiStackServiceHost.Shared.Extensions;
 using MultiStackServiceHost.Broker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace MultiStackServiceHost.Applet
 {

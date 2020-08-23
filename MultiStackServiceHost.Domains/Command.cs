@@ -7,5 +7,6 @@ namespace MultiStackServiceHost.Domains
         public string Text { get; set; }
         public IEnumerable<string> Parameters { get; set; }
         public IEnumerable<string> Switches { get; set; }
+        public IDictionary<string, string> SwitchDictionary { get; set; }
     }
 }

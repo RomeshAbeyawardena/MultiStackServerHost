@@ -120,12 +120,10 @@ namespace MultiStackServiceHost.Services
                 return;
             }
 
-            var workingDirectory = command.Switches.FirstOrDefault(@switch => @switch.StartsWith(applicationSettings.WorkingDirectoryParameter));
-
-            if (!string.IsNullOrEmpty(workingDirectory))
+            if(command.SwitchDictionary
+                .TryGetValue(applicationSettings.WorkingDirectoryParameter, out var workingDirectory))
             {
-                workingDirectory = workingDirectory
-                    .Replace(applicationSettings.WorkingDirectoryParameter, string.Empty);
+                logger.LogDebug("Working directory switch has been specified: {0}", workingDirectory);
             }
 
             parameters.Add(new Parameter
@@ -152,12 +150,14 @@ namespace MultiStackServiceHost.Services
                 || !int.TryParse(processIdParameter, out var processId)
                 || processId > parameters.Count)
             {
-                bool hasParameters = !parameters.IsEmpty();
+                bool hasParameters = !parameters.IsEmpty() 
+                    && parameters.Any(parameter => parameter.Activated);
 
                 if(hasParameters)
                 { 
                     logger
-                        .LogWarning("This will cause all tasks to terminate, are you sure you want to proceed? Y/N");
+                        .LogWarning("This will cause all tasks to terminate, " +
+                        "are you sure you want to proceed? Y/N");
                 }
 
                 if(hasParameters && Console.ReadKey().Key == ConsoleKey.Y)
