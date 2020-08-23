@@ -17,6 +17,7 @@ namespace MultiStackServiceHost.Services
             ILogger<CommandActions> logger,
             IProcessService processService,
             IApplicationState applicationState,
+            IResourceService resourceService,
             ApplicationSettings applicationSettings)
         {
             parameters = new List<Parameter>();
@@ -26,13 +27,20 @@ namespace MultiStackServiceHost.Services
                 .CaseWhen("list", List)
                 .CaseWhen("read", ReadLogs)
                 .CaseWhen("abort", Abort)
+                .CaseWhen("help", Help)
                 .CaseWhen("quit", Quit);
             this.logger = logger;
             this.processService = processService;
             this.applicationState = applicationState;
+            this.resourceService = resourceService;
             this.applicationSettings = applicationSettings;
         }
 
+        private void Help(Command command)
+        {
+            var helpFile = resourceService.GetResourceByName(applicationSettings.HelpFile);
+            logger.LogInformation(helpFile);
+        }
 
         private void ReadLogs(Command command)
         {
@@ -144,9 +152,18 @@ namespace MultiStackServiceHost.Services
                 || !int.TryParse(processIdParameter, out var processId)
                 || processId > parameters.Count)
             {
-                foreach (var parameter in parameters)
+                logger.LogWarning("This will cause all tasks to terminate, are you sure you want to proceed? Y/N");
+
+                if(Console.ReadKey().Key == ConsoleKey.Y)
+                { 
+                    foreach (var parameter in parameters)
+                    {
+                        KillProcess(parameter);
+                    }
+                }
+                else
                 {
-                    KillProcess(parameter);
+                    logger.LogInformation("Abort process cancelled");
                 }
                 return;
             }
@@ -186,6 +203,7 @@ namespace MultiStackServiceHost.Services
         private readonly ILogger<CommandActions> logger;
         private readonly IProcessService processService;
         private readonly IApplicationState applicationState;
+        private readonly IResourceService resourceService;
         private readonly ApplicationSettings applicationSettings;
     }
 }

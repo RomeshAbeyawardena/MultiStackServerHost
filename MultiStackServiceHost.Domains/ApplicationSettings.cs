@@ -12,5 +12,6 @@ namespace MultiStackServiceHost.Domains
         public string WorkingDirectoryParameter { get; set; }
         public string SwitchSeparator { get; set; }
         public string FileName { get; set; }
+        public string HelpFile { get; set; }
     }
 }

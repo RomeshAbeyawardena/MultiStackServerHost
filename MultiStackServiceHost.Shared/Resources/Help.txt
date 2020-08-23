@@ -1,0 +1,63 @@
+[---------------------Begin---------------------]
+
+Input Format
+> [command] [parameters] ~[switch]:[values]
+
+Commands
+
+add
+
+Adds a powershell tasks to the host service
+
+format: add [powershell-command] ~wdir:[working-directory]
+
+	powershell-command: Command to be run by the host service
+	working-directory (optional): Optionally supply a working directory switch to be used by the host service. 
+
+example usage: add yarn run build ~wdir:C:\Work\WebApp\src\App
+
+list
+
+Lists all current tasks, an optional ~save switch can be used to export the list to a JSON file to the filesystem.
+
+format: list ~save:[absolute-filesystem-path]
+
+example usages:
+
+	- Retrieve list of current tasks: list
+	- Save list to the filesystem: list ~save:C:\Tasks\tasks.json
+
+
+read
+
+Reads current logs for the current task, useful for diagnosing issues with tasks
+
+format: read [task-id]
+
+	task-id: The task ID to retrieve logs for, use list command to retrieve task id
+
+example usage: read 1
+
+
+abort
+
+Aborts all running tasks or the current task if specified.
+
+format: abort [task-id]
+	
+	task-id (optional): task id to abort, use list command to retrieve task id 
+
+example usage:
+
+	- abort all running tasks: abort 1
+
+
+quit
+
+Aborts all running tasks and quits the application
+
+format: quit
+
+example usage: quit
+
+[----------------------End----------------------]

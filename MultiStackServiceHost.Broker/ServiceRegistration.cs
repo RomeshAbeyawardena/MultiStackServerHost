@@ -13,6 +13,7 @@ namespace MultiStackServiceHost.Broker
         {
             services
                 .AddSingleton<ApplicationSettings>()
+                .AddSingleton<IResourceService, ResourceService>()
                 .AddSingleton(typeof(ISubject<>), typeof(Subject<>))
                 .AddSingleton<IApplicationState, ApplicationState>()
                 .AddSingleton<ICommandActions, CommandActions>()
