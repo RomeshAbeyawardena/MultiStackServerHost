@@ -11,11 +11,14 @@ namespace MultiStackServiceHost.Services
 {
     public class ApplicationStateValueSetter : IApplicationStateValueSetter
     {
-        public ApplicationStateValueSetter(IApplicationState applicationState)
+        public ApplicationStateValueSetter(
+            IApplicationState applicationState,
+            ApplicationSettings applicationSettings)
         {
             this.applicationState = applicationState;
+            this.applicationSettings = applicationSettings;
             appStateActionswitch = new Switch<string, Func<IApplicationState, string, bool>>()
-                .CaseWhen("warn-on-multiple-tasks-aborted", (state, value) => {
+                .CaseWhen(applicationSettings.WarnOnMultipleAbortSetting, (state, value) => {
                     if(bool.TryParse(value, out var val)){
                         state.SetState(s => s.WarnOnMultipleAbort = val); 
                         return true;
@@ -23,7 +26,7 @@ namespace MultiStackServiceHost.Services
 
                     return false;
                 })
-                .CaseWhen("default-work-directory", (state, value) => {
+                .CaseWhen(applicationSettings.DefaultWorkDirectorySetting, (state, value) => {
                     if (string.IsNullOrWhiteSpace(value) || !Directory.Exists(value))
                     {
                         return false;
@@ -48,5 +51,6 @@ namespace MultiStackServiceHost.Services
 
         private readonly ISwitch<string, Func<IApplicationState, string, bool>> appStateActionswitch;
         private readonly IApplicationState applicationState;
+        private readonly ApplicationSettings applicationSettings;
     }
 }
