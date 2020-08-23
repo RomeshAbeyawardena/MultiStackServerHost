@@ -1,7 +1,12 @@
-﻿namespace MultiStackServiceHost.Contracts
+﻿using MultiStackServiceHost.Domains;
+using System;
+
+namespace MultiStackServiceHost.Contracts
 {
     public interface IApplicationState
     {
-        void SetRunningState(bool state);
+        void Subscribe(Action<AppState> onNextAction);
+        void SetState(Action<AppState> appStateAction);
+        AppState State { get; }
     }
 }

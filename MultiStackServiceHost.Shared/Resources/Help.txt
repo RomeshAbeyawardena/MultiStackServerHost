@@ -1,4 +1,4 @@
-[---------------------Begin---------------------]
+[---------------------Begin Help---------------------]
 
 Input Format
 > [command] [parameters] ~[switch]:[values]
@@ -16,6 +16,7 @@ format: add [powershell-command] ~wdir:[working-directory]
 
 example usage: add yarn run build ~wdir:C:\Work\WebApp\src\App
 
+
 list
 
 Lists all current tasks, an optional ~save switch can be used to export the list to a JSON file to the filesystem.
@@ -26,6 +27,17 @@ example usages:
 
 	- Retrieve list of current tasks: list
 	- Save list to the filesystem: list ~save:C:\Tasks\tasks.json
+
+
+load
+
+Loads a list of tasks stored in the file system
+
+format: load [file-name]
+
+	file-name: Absolute file path and name of the previous stored JSON file
+
+example usage: load C:\fileName.txt
 
 
 read
@@ -60,4 +72,4 @@ format: quit
 
 example usage: quit
 
-[----------------------End----------------------]
+[----------------------End Help----------------------]

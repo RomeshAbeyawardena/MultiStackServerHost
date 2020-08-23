@@ -212,7 +212,7 @@ namespace MultiStackServiceHost.Services
 
         private void Quit(Command command)
         {
-            applicationState.SetRunningState(false);
+            applicationState.SetState(state => state.IsRunning = false);
             Abort(command);
         }
 

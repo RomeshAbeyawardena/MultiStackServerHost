@@ -12,7 +12,6 @@ namespace MultiStackServiceHost.Applet
     {   
         public Startup(
             ILogger<Startup> logger,
-            ISubject<AppState> appStateSubject, 
             IApplicationState applicationState,
             ICommandActions commandActions,
             ICommandParser commandParser,
@@ -23,15 +22,15 @@ namespace MultiStackServiceHost.Applet
             this.commandActions = commandActions;
             this.commandParser = commandParser;
             this.applicationSettings = applicationSettings;
-            appStateSubject.Subscribe(OnNextState);
+            this.applicationState.Subscribe(OnNextState);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             Console.Title = applicationSettings.ApplicationTitle;
-            applicationState.SetRunningState(true);
+            applicationState.SetState(state => state.IsRunning = true);
             logger.LogInformation("Starting app...");
-            while (appState.IsRunning)
+            while (applicationState.State.IsRunning)
             {
                 var input = Console.ReadLine();
                 var command = commandParser.ParseCommand(input);
@@ -63,10 +62,9 @@ namespace MultiStackServiceHost.Applet
 
         private void OnNextState(AppState newAppState)
         {
-            appState = newAppState;
+            logger.LogDebug("Application state updated");
         }
 
-        private AppState appState;
         private readonly ILogger<Startup> logger;
         private readonly IApplicationState applicationState;
         private readonly ICommandActions commandActions;
