@@ -40,13 +40,24 @@ namespace MultiStackServiceHost.Services
 
             if (int.TryParse(processIndexString, out var processIndex))
             {
+
+                if (processIndex > parameters.Count)
+                {
+                    logger.LogError("Unable to find logs for process {0}", processIndex);
+                    return;
+                }
+
                 var cmd = parameters[processIndex];
 
                 if (command != null)
                 {
                     logger.LogInformation(cmd.LogBuilder.ToString());
                 }
+
+                return;
             }
+
+            logger.LogError("Unable to parse {0} as a number", processIndexString);
         }
 
         private void RunParameters(Command command)
@@ -68,23 +79,23 @@ namespace MultiStackServiceHost.Services
                         );
 
                         var process = processService.StartProcess(
-                            applicationSettings.FileName, 
-                            parameter.CommandText, 
+                            applicationSettings.FileName,
+                            parameter.CommandText,
                             parameter.WorkingDirectory);
 
                         parameter.ProcessInstance = process;
                         parameter.Activated = true;
                         process.Start();
                         logger.LogInformation($"Task { parameter.CommandText } running");
-                        
+
                         Task.Run(() =>
                         {
-                            while (!process.StandardOutput.EndOfStream)
+                            while (!process.HasExited && !process.StandardOutput.EndOfStream)
                             {
                                 parameter.LogBuilder.AppendLine(process.StandardOutput.ReadLine());
                             }
                         });
-                        
+
                         process.WaitForExit();
                         parameter.Activated = false;
                         logger.LogInformation($"Task { parameter.CommandText } completed");
@@ -95,6 +106,12 @@ namespace MultiStackServiceHost.Services
 
         private void AddParameter(Command command)
         {
+            if (command.Parameters.IsEmpty())
+            {
+                logger.LogError("Unable to add parameter with an empty command");
+                return;
+            }
+
             var workingDirectory = command.Switches.FirstOrDefault(@switch => @switch.StartsWith(applicationSettings.WorkingDirectoryParameter));
 
             if (!string.IsNullOrEmpty(workingDirectory))
@@ -113,13 +130,28 @@ namespace MultiStackServiceHost.Services
 
         private void Abort(Command command)
         {
-            foreach (var parameter in parameters)
+            void KillProcess(Parameter param)
             {
-                if (parameter.Activated)
-                {
-                    processService.KillProcessAndChildren(parameter.ProcessInstance);
-                }
+                if (param.Activated)
+                    {
+                        processService.KillProcessAndChildren(param.ProcessInstance);
+                    }
             }
+
+            var processIdParameter = command.Parameters.FirstOrDefault();
+
+            if (string.IsNullOrEmpty(processIdParameter)
+                || !int.TryParse(processIdParameter, out var processId)
+                || processId > parameters.Count)
+            {
+                foreach (var parameter in parameters)
+                {
+                    KillProcess(parameter);
+                }
+                return;
+            }
+
+            KillProcess(parameters[processId]);
         }
 
         private void List(Command command)
@@ -132,12 +164,12 @@ namespace MultiStackServiceHost.Services
 
             var listBuilder = new StringBuilder(
                 "\r\nIndex:\t[CommandText]\t\t\t[Activated]\t[Working Directory]\r\n");
-            
+
             var index = 0;
             foreach (var parameter in parameters)
             {
-                listBuilder.AppendFormat("{0}:\t{1}\t\t\t{2}\t{3}\t{4}\r\n", 
-                    index++, parameter.CommandText, parameter.Activated, 
+                listBuilder.AppendFormat("{0}:\t{1}\t\t\t{2}\t{3}\t{4}\r\n",
+                    index++, parameter.CommandText, parameter.Activated,
                     parameter.Instance?.Id, parameter.WorkingDirectory);
             }
 

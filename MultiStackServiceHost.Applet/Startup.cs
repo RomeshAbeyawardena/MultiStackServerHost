@@ -31,9 +31,22 @@ namespace MultiStackServiceHost.Applet
             while (appState.IsRunning)
             {
                 Console.Write("\r\n> ");
-                var command = commandParser.ParseCommand(Console.ReadLine());
+                var input = Console.ReadLine();
+                var command = commandParser.ParseCommand(input);
+
+                if(command == null)
+                {
+                    logger.LogError("Unable to parse command '{0}'", input);
+                    continue;
+                }
 
                 var parameter = commandActions.Case(command.Text);
+
+                if(parameter == null)
+                {
+                    logger.LogError("Unable to process command '{0}'", input);
+                    continue;
+                }
 
                 parameter.Invoke(command);
             }

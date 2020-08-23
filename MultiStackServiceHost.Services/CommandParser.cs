@@ -17,6 +17,11 @@ namespace MultiStackServiceHost.Services
 
         public Command ParseCommand(string input)
         {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return null;
+            }
+
             var commandAndArgs = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             var commandText = commandAndArgs[0];
