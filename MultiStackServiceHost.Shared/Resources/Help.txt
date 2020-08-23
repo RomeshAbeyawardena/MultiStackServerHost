@@ -64,6 +64,20 @@ example usage:
 	- abort all running tasks: abort 1
 
 
+global
+
+Sets configuration settings that applies to the current session.
+
+format: global [action]:[setting] [value]
+
+	action: the action to perform on the specified setting, currently supported set and unset
+	setting: the setting to be set or unset
+	value: the new value to set to the setting to
+
+accepted settings:
+	- warn-on-multiple-tasks-aborted (default:true or false)
+	- default-work-directory (default:application directory)
+
 quit
 
 Aborts all running tasks and quits the application

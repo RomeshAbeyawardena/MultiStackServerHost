@@ -19,6 +19,7 @@ namespace MultiStackServiceHost.Broker
                 .AddSingleton<IApplicationState, ApplicationState>()
                 .AddSingleton<ICommandActions, CommandActions>()
                 .AddSingleton<ICommandParser, CommandParser>()
+                .AddSingleton<IApplicationStateValueSetter, ApplicationStateValueSetter>()
                 .AddSingleton<IProcessService, ProcessService>();
         }
     }

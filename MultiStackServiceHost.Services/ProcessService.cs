@@ -22,7 +22,7 @@ namespace MultiStackServiceHost.Services
             KillProcessAndChildren(process.Id);
         }
 
-        public Process StartProcess(string fileName, string arguments, string workingDirectory)
+        public Process CreateProcess(string fileName, string arguments, string workingDirectory)
         {
             var process = new Process();
             process.StartInfo.FileName = fileName;

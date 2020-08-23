@@ -3,7 +3,6 @@ using MultiStackServiceHost.Contracts;
 using MultiStackServiceHost.Shared.Extensions;
 using System;
 using System.Collections.Generic;
-
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -21,6 +20,7 @@ namespace MultiStackServiceHost.Services
             IProcessService processService,
             IApplicationState applicationState,
             IResourceService resourceService,
+            IApplicationStateValueSetter applicationStateValueSetter,
             ApplicationSettings applicationSettings)
         {
             parameters = new List<Parameter>();
@@ -31,12 +31,41 @@ namespace MultiStackServiceHost.Services
                 .CaseWhen("read", ReadLogs)
                 .CaseWhen("abort", Abort)
                 .CaseWhen("help", Help)
+                .CaseWhen("global", Global)
                 .CaseWhen("quit", Quit);
+
             this.logger = logger;
             this.processService = processService;
             this.applicationState = applicationState;
             this.resourceService = resourceService;
+            this.applicationStateValueSetter = applicationStateValueSetter;
             this.applicationSettings = applicationSettings;
+        }
+
+        private void Global(Command command)
+        {
+            var firstParameter = command.Parameters.FirstOrDefault();
+
+            if(firstParameter == null)
+            {
+                return;
+            }
+
+            if (firstParameter.StartsWith("set:"))
+            {
+                if(command.Parameters.Count() < 2)
+                {
+                    return;
+                }
+
+                var setting = firstParameter.Replace("set:", string.Empty);
+                var value = command.Parameters.GetByIndex(1);
+
+                if(!applicationStateValueSetter.TrySetValue(setting, value))
+                {
+                    logger.LogError("Unable to set property {0}", setting);
+                }
+            }
         }
 
         private void Help(Command command)
@@ -89,10 +118,12 @@ namespace MultiStackServiceHost.Services
                             parameter.WorkingDirectory
                         );
 
-                        var process = processService.StartProcess(
+                        var process = processService.CreateProcess(
                             applicationSettings.FileName,
                             parameter.CommandText,
-                            parameter.WorkingDirectory);
+                            string.IsNullOrWhiteSpace(parameter.WorkingDirectory) 
+                                ? applicationState.State.DefaultWorkDirectory
+                                : string.Empty);
 
                         parameter.ProcessInstance = process;
                         parameter.Activated = true;
@@ -135,7 +166,6 @@ namespace MultiStackServiceHost.Services
                 WorkingDirectory = workingDirectory
             });
         }
-
 
         private void Abort(Command command)
         {
@@ -221,6 +251,7 @@ namespace MultiStackServiceHost.Services
         private readonly IProcessService processService;
         private readonly IApplicationState applicationState;
         private readonly IResourceService resourceService;
+        private readonly IApplicationStateValueSetter applicationStateValueSetter;
         private readonly ApplicationSettings applicationSettings;
     }
 }
