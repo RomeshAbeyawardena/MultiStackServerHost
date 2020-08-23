@@ -5,6 +5,6 @@ namespace MultiStackServiceHost.Contracts
     public interface IProcessService
     {
         Process StartProcess(string fileName, string arguments, string workingDirectory);
-        void KillProcessAndChildrens(Process process);
+        void KillProcessAndChildren(Process process);
     }
 }

@@ -57,12 +57,26 @@ namespace MultiStackServiceHost.Services
                 {
                     parameter.Instance = Task.Run(() =>
                     {
-                        logger.LogInformation($"Task { parameter.CommandText } running");
-                        var process = processService.StartProcess(applicationSettings.FileName, parameter.CommandText, parameter.WorkingDirectory);
+                        logger.LogDebug("Creating process in worker {0} with the following parameters:" +
+                            "\r\n\tFile Name: {1}" +
+                            "\r\n\tArguments: {2}" +
+                            "\r\n\tWorking Directory: {3}",
+                            Task.CurrentId,
+                            applicationSettings.FileName,
+                            parameter.CommandText,
+                            parameter.WorkingDirectory
+                        );
+
+                        var process = processService.StartProcess(
+                            applicationSettings.FileName, 
+                            parameter.CommandText, 
+                            parameter.WorkingDirectory);
+
                         parameter.ProcessInstance = process;
                         parameter.Activated = true;
                         process.Start();
-
+                        logger.LogInformation($"Task { parameter.CommandText } running");
+                        
                         Task.Run(() =>
                         {
                             while (!process.StandardOutput.EndOfStream)
@@ -85,7 +99,8 @@ namespace MultiStackServiceHost.Services
 
             if (!string.IsNullOrEmpty(workingDirectory))
             {
-                workingDirectory = workingDirectory.Replace(applicationSettings.WorkingDirectoryParameter, string.Empty);
+                workingDirectory = workingDirectory
+                    .Replace(applicationSettings.WorkingDirectoryParameter, string.Empty);
             }
 
             parameters.Add(new Parameter
@@ -102,7 +117,7 @@ namespace MultiStackServiceHost.Services
             {
                 if (parameter.Activated)
                 {
-                    processService.KillProcessAndChildrens(parameter.ProcessInstance);
+                    processService.KillProcessAndChildren(parameter.ProcessInstance);
                 }
             }
         }
@@ -115,8 +130,8 @@ namespace MultiStackServiceHost.Services
                 return;
             }
 
-            var listBuilder = new StringBuilder();
-            listBuilder.AppendFormat("\r\nIndex:\t[CommandText]\t\t\t[Activated]\t[Working Directory]\r\n");
+            var listBuilder = new StringBuilder(
+                "\r\nIndex:\t[CommandText]\t\t\t[Activated]\t[Working Directory]\r\n");
             
             var index = 0;
             foreach (var parameter in parameters)
