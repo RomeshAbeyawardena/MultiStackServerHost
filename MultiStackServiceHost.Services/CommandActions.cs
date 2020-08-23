@@ -28,6 +28,7 @@ namespace MultiStackServiceHost.Services
             CaseWhen("add", AddParameter)
                 .CaseWhen("run", RunParameters)
                 .CaseWhen("list", List)
+                .CaseWhen("load", Load)
                 .CaseWhen("read", ReadLogs)
                 .CaseWhen("abort", Abort)
                 .CaseWhen("help", Help)
@@ -42,18 +43,36 @@ namespace MultiStackServiceHost.Services
             this.applicationSettings = applicationSettings;
         }
 
+        private void Load(Command command)
+        {
+            var fileName = command.Parameters.FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(fileName) || !File.Exists(fileName))
+            {
+                logger.LogError("File {0} not found", fileName);
+                return;
+            }
+
+            Abort(command);
+
+            var newParameters = JsonSerializer.Deserialize<IEnumerable<Parameter>>(File.ReadAllText(fileName));
+
+            parameters.Clear();
+            parameters.AddRange(newParameters);
+        }
+
         private void Global(Command command)
         {
             var firstParameter = command.Parameters.FirstOrDefault();
 
-            if(firstParameter == null)
+            if (firstParameter == null)
             {
                 return;
             }
 
             if (firstParameter.StartsWith("set:"))
             {
-                if(command.Parameters.Count() < 2)
+                if (command.Parameters.Count() < 2)
                 {
                     return;
                 }
@@ -61,7 +80,7 @@ namespace MultiStackServiceHost.Services
                 var setting = firstParameter.Replace("set:", string.Empty);
                 var value = command.Parameters.GetByIndex(1);
 
-                if(!applicationStateValueSetter.TrySetValue(setting, value))
+                if (!applicationStateValueSetter.TrySetValue(setting, value))
                 {
                     logger.LogError("Unable to set property {0}", setting);
                 }
@@ -121,9 +140,9 @@ namespace MultiStackServiceHost.Services
                         var process = processService.CreateProcess(
                             applicationSettings.FileName,
                             parameter.CommandText,
-                            string.IsNullOrWhiteSpace(parameter.WorkingDirectory) 
-                                ? applicationState.State.DefaultWorkDirectory
-                                : string.Empty);
+                            string.IsNullOrWhiteSpace(parameter.WorkingDirectory)
+                                ? applicationState.State.DefaultWorkDirectory ?? string.Empty
+                                : parameter.WorkingDirectory);
 
                         parameter.ProcessInstance = process;
                         parameter.Activated = true;
@@ -154,7 +173,7 @@ namespace MultiStackServiceHost.Services
                 return;
             }
 
-            if(command.SwitchDictionary
+            if (command.SwitchDictionary
                 .TryGetValue(applicationSettings.WorkingDirectoryParameter, out var workingDirectory))
             {
                 logger.LogDebug("Working directory switch has been specified: {0}", workingDirectory);
@@ -172,9 +191,9 @@ namespace MultiStackServiceHost.Services
             void KillProcess(Parameter param)
             {
                 if (param.Activated)
-                    {
-                        processService.KillProcessAndChildren(param.ProcessInstance);
-                    }
+                {
+                    processService.KillProcessAndChildren(param.ProcessInstance);
+                }
             }
 
             var processIdParameter = command.Parameters.FirstOrDefault();
@@ -183,26 +202,30 @@ namespace MultiStackServiceHost.Services
                 || !int.TryParse(processIdParameter, out var processId)
                 || processId > parameters.Count)
             {
-                bool hasParameters = !parameters.IsEmpty() 
+                bool hasParameters = !parameters.IsEmpty()
                     && parameters.Any(parameter => parameter.Activated);
 
-                if(hasParameters)
-                { 
-                    logger
-                        .LogWarning("This will cause all tasks to terminate, " +
-                        "are you sure you want to proceed? Y/N");
-                }
-
-                if(hasParameters && Console.ReadKey().Key == ConsoleKey.Y)
-                { 
-                    foreach (var parameter in parameters)
-                    {
-                        KillProcess(parameter);
-                    }
-                }
-                else
+                if (hasParameters)
                 {
-                    logger.LogInformation("Abort process cancelled");
+                    if (applicationState.State.WarnOnMultipleAbort)
+                    {
+                        logger
+                            .LogWarning("This will cause all tasks to terminate, " +
+                            "are you sure you want to proceed? Y/N");
+                    }
+
+                    if (!applicationState.State.WarnOnMultipleAbort || Console.ReadKey().Key == ConsoleKey.Y)
+                    {
+                        foreach (var parameter in parameters)
+                        {
+                            KillProcess(parameter);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogInformation("Abort process cancelled");
+                    }
+
                 }
 
                 return;
@@ -219,7 +242,7 @@ namespace MultiStackServiceHost.Services
                 return;
             }
 
-            if(command.SwitchDictionary.TryGetValue("save", out var saveFilePath))
+            if (command.SwitchDictionary.TryGetValue("save", out var saveFilePath))
             {
                 File.WriteAllText(saveFilePath, JsonSerializer.Serialize(parameters.ToArray()));
                 logger.LogInformation("Tasks have been saved to {0}", saveFilePath);

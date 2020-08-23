@@ -28,7 +28,11 @@ namespace MultiStackServiceHost.Applet
         public Task StartAsync(CancellationToken cancellationToken)
         {
             Console.Title = applicationSettings.ApplicationTitle;
-            applicationState.SetState(state => state.IsRunning = true);
+            applicationState.SetState(state => { 
+                state.IsRunning = true;
+                state.WarnOnMultipleAbort = true;
+            });
+
             logger.LogInformation("Starting app...");
             while (applicationState.State.IsRunning)
             {
