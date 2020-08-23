@@ -4,6 +4,7 @@ using MultiStackServiceHost.Contracts;
 using MultiStackServiceHost.Domains;
 using MultiStackServiceHost.Services;
 using System.Reactive.Subjects;
+using System.Text.Json.Serialization;
 
 namespace MultiStackServiceHost.Broker
 {

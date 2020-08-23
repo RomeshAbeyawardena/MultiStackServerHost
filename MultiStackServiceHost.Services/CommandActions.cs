@@ -8,6 +8,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MultiStackServiceHost.Services
 {
@@ -183,6 +186,13 @@ namespace MultiStackServiceHost.Services
             if (parameters.IsEmpty())
             {
                 logger.LogInformation("Nothing to list, add commands using the add command");
+                return;
+            }
+
+            if(command.SwitchDictionary.TryGetValue("save", out var saveFilePath))
+            {
+                File.WriteAllText(saveFilePath, JsonSerializer.Serialize(parameters.ToArray()));
+                logger.LogInformation("Tasks have been saved to {0}", saveFilePath);
                 return;
             }
 

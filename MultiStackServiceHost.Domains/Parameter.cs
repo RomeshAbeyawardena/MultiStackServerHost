@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace MultiStackServiceHost.Domains
 {
@@ -14,8 +16,14 @@ namespace MultiStackServiceHost.Domains
         public string CommandText { get; set; }
         public string WorkingDirectory { get; set; }
         public bool Activated { get; set; }
+
+        [JsonIgnore]
         public Task Instance { get; set; }
+
+        [JsonIgnore]
         public Process ProcessInstance { get; set; }
+
+        [JsonIgnore]
         public StringBuilder LogBuilder { get; }
     }
 }
