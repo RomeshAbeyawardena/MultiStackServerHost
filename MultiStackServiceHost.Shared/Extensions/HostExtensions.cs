@@ -19,10 +19,15 @@ namespace MultiStackServiceHost.Shared.Extensions
         public static IAppHost<TStartup> UseStartup<TStartup>(
             this IAppHost<TStartup> host, 
             Action<TStartup> startingMethod = null, 
-            Func<TStartup, CancellationToken, Task> startingAsyncMethod = null)
+            Func<TStartup, CancellationToken, Task> startingAsyncMethod = null,
+            Action<TStartup> stoppingMethod = null,
+            Func<TStartup, CancellationToken, Task> stoppingAsyncMethod = null
+            )
         {
             host.StartAction = startingMethod;
             host.StartActionAsync = startingAsyncMethod;
+            host.StopAction = stoppingMethod;
+            host.StopActionAsync = stoppingAsyncMethod;
             return host;
         }
     }

@@ -11,6 +11,8 @@ namespace MultiStackServiceHost.Shared.Hosts
     {
         public Action<TStartup> StartAction { get; set; }
         public Func<TStartup, CancellationToken, Task> StartActionAsync { get; set; }
+        public Action<TStartup> StopAction { get; set; }
+        public Func<TStartup, CancellationToken, Task> StopActionAsync { get; set; }
 
         public AppHost(IServiceProvider serviceProvider)
             : base(serviceProvider)
@@ -20,12 +22,13 @@ namespace MultiStackServiceHost.Shared.Hosts
 
         public override Task StartAsync(CancellationToken cancellationToken = default)
         {
-            var startupService = Services.GetRequiredService<TStartup>();
+            startupService = Services.GetRequiredService<TStartup>();
 
             if(startupService == null)
             {
                 throw new NullReferenceException(nameof(startupService));
             }
+
             if(StartAction != null)
             {
                 StartAction.Invoke(startupService);
@@ -34,6 +37,24 @@ namespace MultiStackServiceHost.Shared.Hosts
 
             return StartActionAsync?.Invoke(startupService, cancellationToken);
         }
+
+        public override Task StopAsync(CancellationToken cancellationToken = default)
+        {
+            if(startupService == null)
+            {
+                throw new NullReferenceException(nameof(startupService));
+            }
+
+            if(StopAction != null)
+            {
+                StopAction.Invoke(startupService);
+                return Task.CompletedTask;
+            }
+
+            return StopActionAsync?.Invoke(startupService, cancellationToken);
+        }
+
+        private TStartup startupService;
     }
 
     public class AppHost : IAppHost
@@ -80,7 +101,7 @@ namespace MultiStackServiceHost.Shared.Hosts
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken = default)
+        public virtual Task StopAsync(CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }

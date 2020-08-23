@@ -152,9 +152,15 @@ namespace MultiStackServiceHost.Services
                 || !int.TryParse(processIdParameter, out var processId)
                 || processId > parameters.Count)
             {
-                logger.LogWarning("This will cause all tasks to terminate, are you sure you want to proceed? Y/N");
+                bool hasParameters = !parameters.IsEmpty();
 
-                if(Console.ReadKey().Key == ConsoleKey.Y)
+                if(hasParameters)
+                { 
+                    logger
+                        .LogWarning("This will cause all tasks to terminate, are you sure you want to proceed? Y/N");
+                }
+
+                if(hasParameters && Console.ReadKey().Key == ConsoleKey.Y)
                 { 
                     foreach (var parameter in parameters)
                     {
@@ -165,6 +171,7 @@ namespace MultiStackServiceHost.Services
                 {
                     logger.LogInformation("Abort process cancelled");
                 }
+
                 return;
             }
 

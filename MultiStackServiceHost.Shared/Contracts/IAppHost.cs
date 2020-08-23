@@ -16,5 +16,7 @@ namespace MultiStackServiceHost.Shared.Contracts
     {
         Action<TStartup> StartAction { get; set; }
         Func<TStartup, CancellationToken, Task> StartActionAsync { get; set; }
+        Action<TStartup> StopAction { get; set; }
+        Func<TStartup, CancellationToken, Task> StopActionAsync { get; set; }
     }
 }
