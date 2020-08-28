@@ -27,4 +27,8 @@
     <Folder Include="Resources\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MultiStackServiceHost.Contracts\MultiStackServiceHost.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

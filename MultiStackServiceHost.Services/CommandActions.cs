@@ -21,6 +21,7 @@ namespace MultiStackServiceHost.Services
             IApplicationState applicationState,
             IResourceService resourceService,
             IApplicationStateValueSetter applicationStateValueSetter,
+            IFileSystem fileSystem,
             ApplicationSettings applicationSettings)
         {
             parameters = new List<Parameter>();
@@ -40,6 +41,7 @@ namespace MultiStackServiceHost.Services
             this.applicationState = applicationState;
             this.resourceService = resourceService;
             this.applicationStateValueSetter = applicationStateValueSetter;
+            this.fileSystem = fileSystem;
             this.applicationSettings = applicationSettings;
         }
 
@@ -47,18 +49,26 @@ namespace MultiStackServiceHost.Services
         {
             var fileName = command.Parameters.FirstOrDefault();
 
-            if (string.IsNullOrWhiteSpace(fileName) || !File.Exists(fileName))
+            if (string.IsNullOrWhiteSpace(fileName))
             {
-                logger.LogError("File {0} not found", fileName);
+                logger.LogError("File {0} not specified", fileName);
                 return;
             }
 
-            Abort(command);
+            var attempt = fileSystem.TryReadTextFile(fileName);
 
-            var newParameters = JsonSerializer.Deserialize<IEnumerable<Parameter>>(File.ReadAllText(fileName));
+            if(attempt.Successful){
+                Abort(command);
+                var newParameters = JsonSerializer
+                    .Deserialize<IEnumerable<Parameter>>(attempt.Result);
 
-            parameters.Clear();
-            parameters.AddRange(newParameters);
+                parameters.Clear();
+                parameters.AddRange(newParameters);
+            }
+            else
+            {
+                logger.LogError(attempt.Exception, "Unable to save tasks to file.");
+            }
         }
 
         private void Global(Command command)
@@ -95,12 +105,15 @@ namespace MultiStackServiceHost.Services
 
         private void ReadLogs(Command command)
         {
-            var processIndexString = command.Parameters.GetByIndex(0);
+            var processIndexString = command.Parameters.FirstOrDefault();
 
-            if (int.TryParse(processIndexString, out var processIndex))
+            if (processIndexString != null 
+                && int.TryParse(processIndexString, out var processIndex))
             {
 
-                if (processIndex > parameters.Count)
+                if (processIndex < 0 
+                    || parameters.Count == 0 
+                    || processIndex > parameters.Count)
                 {
                     logger.LogError("Unable to find logs for process {0}", processIndex);
                     return;
@@ -244,8 +257,15 @@ namespace MultiStackServiceHost.Services
 
             if (command.SwitchDictionary.TryGetValue("save", out var saveFilePath))
             {
-                File.WriteAllText(saveFilePath, JsonSerializer.Serialize(parameters.ToArray()));
-                logger.LogInformation("Tasks have been saved to {0}", saveFilePath);
+                var attempt = fileSystem.TryWriteTextFile(saveFilePath, JsonSerializer.Serialize(parameters.ToArray()));
+                if(attempt.Successful)
+                {
+                    logger.LogInformation("Tasks have been saved to {0}", saveFilePath);
+                }
+                else
+                {
+                    logger.LogError(attempt.Exception, "Unable to save tasks to file.");
+                }
                 return;
             }
 
@@ -275,6 +295,7 @@ namespace MultiStackServiceHost.Services
         private readonly IApplicationState applicationState;
         private readonly IResourceService resourceService;
         private readonly IApplicationStateValueSetter applicationStateValueSetter;
+        private readonly IFileSystem fileSystem;
         private readonly ApplicationSettings applicationSettings;
     }
 }

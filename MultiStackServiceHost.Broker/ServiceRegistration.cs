@@ -16,6 +16,7 @@ namespace MultiStackServiceHost.Broker
                 .AddSingleton<ApplicationSettings>()
                 .AddSingleton<IResourceService, ResourceService>()
                 .AddSingleton(typeof(ISubject<>), typeof(Subject<>))
+                .AddSingleton<IFileSystem, FileSystem>()
                 .AddSingleton<IApplicationState, ApplicationState>()
                 .AddSingleton<ICommandActions, CommandActions>()
                 .AddSingleton<ICommandParser, CommandParser>()

@@ -15,6 +15,8 @@ namespace MultiStackServiceHost.Domains
 
         public string CommandText { get; set; }
         public string WorkingDirectory { get; set; }
+
+        [JsonIgnore]
         public bool Activated { get; set; }
 
         [JsonIgnore]
