@@ -270,14 +270,14 @@ namespace MultiStackServiceHost.Services
             }
 
             var listBuilder = new StringBuilder(
-                "\r\nIndex:\t[CommandText]\t\t\t[Activated]\t[Working Directory]\r\n");
+                "\r\nIndex:\t[CommandText]\t\t\t[Activated]\tInstance Id\tProcessId\t[Working Directory]\r\n");
 
             var index = 0;
             foreach (var parameter in parameters)
             {
-                listBuilder.AppendFormat("{0}:\t{1}\t\t\t{2}\t{3}\t{4}\r\n",
+                listBuilder.AppendFormat("{0}:\t{1}\t\t\t{2}\t{3}\t{4}\t{5}\r\n",
                     index++, parameter.CommandText, parameter.Activated,
-                    parameter.Instance?.Id, parameter.WorkingDirectory);
+                    parameter.Instance?.Id, parameter.ProcessInstance?.Id, parameter.WorkingDirectory);
             }
 
             logger.LogInformation(listBuilder.ToString());

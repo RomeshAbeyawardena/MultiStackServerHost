@@ -2,9 +2,17 @@
 using MultiStackServiceHost.Contracts;
 using MultiStackServiceHost.Domains;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reactive.Subjects;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.FileSystemGlobbing;
+using System.Text.RegularExpressions;
+using System.Linq;
+using System.IO;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
 namespace MultiStackServiceHost.Applet
 {
@@ -25,6 +33,57 @@ namespace MultiStackServiceHost.Applet
             this.applicationState.Subscribe(OnNextState);
         }
 
+        
+        public static string ReadLine()
+        {
+            var lineStringBuilder = new StringBuilder();
+
+            var dictionary = new Dictionary<ConsoleKey, Func<ConsoleKey, string, bool>>();
+
+            dictionary.Add(ConsoleKey.Enter, (key, currentVal) => true);
+            dictionary.Add(ConsoleKey.Tab, (key, currentVal) =>
+            {
+                var matcher = new Matcher();
+                var parameterList = new List<string>();
+                foreach(var parameter in currentVal.Split(' '))
+                { 
+                    if(Regex.IsMatch(parameter, @"(.)+([:]{0,1})([\\])(.)+"))
+                    {
+                        var result = matcher.AddInclude(parameter).Execute(new DirectoryInfoWrapper(new DirectoryInfo("C:\\")));
+                        if (result.HasMatches)
+                        {
+                            parameterList.Add(result.Files.FirstOrDefault().Path);
+                        }
+                        parameterList.Add(parameter);
+                        continue;
+                    }
+                    parameterList.Add(parameter);
+                }
+                lineStringBuilder.Append(string.Join(' ', parameterList));
+                return false;
+            });
+
+            var currentKey = Console.ReadKey(true);
+
+            while(true)
+            {
+                if (dictionary.TryGetValue(currentKey.Key, out var action) 
+                    && action.Invoke(currentKey.Key, lineStringBuilder.ToString()))
+                {
+                    break;
+                }
+                if(action == null)
+                { 
+                    lineStringBuilder.Append(currentKey.KeyChar);
+                    Console.Write(currentKey.KeyChar);
+                }
+
+                currentKey = Console.ReadKey(true);
+            }
+
+            return lineStringBuilder.ToString();
+        }
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             Console.Title = applicationSettings.ApplicationTitle;
@@ -37,6 +96,7 @@ namespace MultiStackServiceHost.Applet
             while (applicationState.State.IsRunning)
             {
                 var input = Console.ReadLine();
+                
                 var command = commandParser.ParseCommand(input);
 
                 if(command == null)
